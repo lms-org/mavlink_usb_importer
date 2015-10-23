@@ -7,7 +7,7 @@
 #include <thread>
 #include <vector>
 
-#include "mavlink/bluetoothApp/mavlink.h"
+#include <mavlink/CC2016/mavlink.h>
 
 class mavlink_usb_importer : public lms::Module {
 public:
