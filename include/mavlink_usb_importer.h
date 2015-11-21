@@ -44,10 +44,10 @@ protected:
     const lms::ModuleConfig* config;
     
     //! Out data channel (messages to be sent)
-    std::vector<mavlink_message_t>* outChannel;
+    lms::WriteDataChannel< std::vector<mavlink_message_t> > outChannel;
     
     //! In data channel (messages received)
-    std::vector<mavlink_message_t>* inChannel;
+    lms::WriteDataChannel< std::vector<mavlink_message_t> > inChannel;
     
     //! Receiver thread reading sensor data in the background
     std::thread receiverThread;
