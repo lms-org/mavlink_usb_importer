@@ -8,6 +8,7 @@
 #include <vector>
 
 #include <mavlink/CC2016/mavlink.h>
+#include <mavlink/lms/data.h>
 
 class mavlink_usb_importer : public lms::Module {
 public:
@@ -44,10 +45,10 @@ protected:
     const lms::ModuleConfig* config;
     
     //! Out data channel (messages to be sent)
-    lms::WriteDataChannel< std::vector<mavlink_message_t> > outChannel;
+    lms::WriteDataChannel<Mavlink::Data> outChannel;
     
     //! In data channel (messages received)
-    lms::WriteDataChannel< std::vector<mavlink_message_t> > inChannel;
+    lms::WriteDataChannel<Mavlink::Data> inChannel;
     
     //! Receiver thread reading sensor data in the background
     std::thread receiverThread;
@@ -59,7 +60,7 @@ protected:
     mavlink_status_t receiverStatus;
     
     //! Temporary message buffer
-    std::vector<mavlink_message_t> messageBuffer;
+    Mavlink::Data messageBuffer;
     std::mutex messageBufferMutex;
     
 };

@@ -17,8 +17,8 @@ bool mavlink_usb_importer::initialize() {
     path = config->get<std::string>("path");
     
     // Setup datachannels
-    inChannel = datamanager()->writeChannel< std::vector<mavlink_message_t> >(this, "MAVLINK_IN");
-    outChannel = datamanager()->writeChannel< std::vector<mavlink_message_t> >(this, "MAVLINK_OUT");
+    inChannel = writeChannel<Mavlink::Data>("MAVLINK_IN");
+    outChannel = writeChannel<Mavlink::Data>("MAVLINK_OUT");
     
     logger.info("device") << "Opening USB device at " << path;
 
@@ -100,7 +100,7 @@ void mavlink_usb_importer::receiver()
             {
                 // new message received, put message in temporary buffer
                 messageBufferMutex.lock();
-                messageBuffer.push_back(msg);
+                messageBuffer.add(msg);
                 messageBufferMutex.unlock();
                 logger.debug("receive") << "Received Message!";
             }
