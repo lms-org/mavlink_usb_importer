@@ -1,7 +1,6 @@
 #ifndef MAVLINK_USB_IMPORTER_H
 #define MAVLINK_USB_IMPORTER_H
 
-#include <lms/datamanager.h>
 #include <lms/module.h>
 
 #include <thread>
