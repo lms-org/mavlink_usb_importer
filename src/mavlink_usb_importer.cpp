@@ -22,8 +22,7 @@ bool mavlink_usb_importer::initialize() {
     
     logger.info("device") << "Opening USB device at " << path;
 
-    if(!initUSB())
-    {
+    if(!initUSB()){
         return false;
     }
 
@@ -52,21 +51,24 @@ bool mavlink_usb_importer::deinitialize() {
 bool mavlink_usb_importer::cycle() {
     // Send messages
     uint8_t buffer[MAVLINK_MAX_PACKET_LEN];
-    
-    for(const auto& msg : *outChannel )
-    {
-        uint16_t numBytes = mavlink_msg_to_send_buffer(buffer, &msg);
-        ssize_t numBytesTransmitted = write(usb_fd, buffer, numBytes);
-        
-        if( numBytes == numBytesTransmitted )
-        {
-            logger.debug("cycle") << "Sent message with " << numBytes << " bytes!";
-        } else if( numBytesTransmitted < 0 )
-        {
-            logger.perror("cycle") << "Unable to send message";
-        } else
-        {
-            logger.warn("cycle") << "Tried to send message with " << numBytes << "bytes, but transmitted " << numBytesTransmitted;
+    //TODO count errors
+    for(const auto& msg : *outChannel ){
+        while(true){
+            uint16_t numBytes = mavlink_msg_to_send_buffer(buffer, &msg);
+            logger.debug("cycle")<<"trying to send "<<numBytes;
+            ssize_t numBytesTransmitted = write(usb_fd, buffer, numBytes);
+            logger.debug("cycle")<<"I sent "<<numBytesTransmitted;
+            if( numBytes == numBytesTransmitted ){
+                logger.debug("cycle") << "Sent message with " << numBytes << " bytes!";
+                break;
+            } else if( numBytesTransmitted < 0 ){
+                logger.perror("cycle") << "Unable to send message";
+                isValidFD(usb_fd);
+            } else{
+                logger.warn("cycle") << "Tried to send message with " << numBytes << "bytes, but transmitted " << numBytesTransmitted;
+                isValidFD(usb_fd);
+            }
+            lms::Time::fromMillis(1).sleep();
         }
     }
     
@@ -78,6 +80,7 @@ bool mavlink_usb_importer::cycle() {
     
     // TODO: use move semantics
     *inChannel = messageBuffer;
+    logger.debug("new messages: ")<<messageBuffer.messages.size();
     messageBuffer.clear();
     
     messageBufferMutex.unlock();
