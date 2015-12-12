@@ -80,7 +80,7 @@ bool mavlink_usb_importer::cycle() {
     
     // TODO: use move semantics
     *inChannel = messageBuffer;
-    logger.debug("new messages: ")<<messageBuffer.messages.size();
+    //logger.debug("new messages: ")<<messageBuffer.messages.size();
     messageBuffer.clear();
     
     messageBufferMutex.unlock();
