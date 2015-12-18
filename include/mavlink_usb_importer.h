@@ -34,15 +34,12 @@ protected:
     void receiver();
     
 protected:
-    //! Path to USB device
-    std::string path;
+    //! Paths to USB device
+    std::vector<std::string> paths;
     
     //! USB device handle
     int usb_fd;
-    
-    //! Module config
-    const lms::ModuleConfig* config;
-    
+
     //! Out data channel (messages to be sent)
     lms::WriteDataChannel<Mavlink::Data> outChannel;
     
