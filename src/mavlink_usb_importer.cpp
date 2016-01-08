@@ -13,14 +13,12 @@
 #endif
 
 bool mavlink_usb_importer::initialize() {
-    config = getConfig();
-    path = config->get<std::string>("path");
-    
+
+    paths = config().getArray<std::string>("path");
+
     // Setup datachannels
     inChannel = writeChannel<Mavlink::Data>("MAVLINK_IN");
     outChannel = writeChannel<Mavlink::Data>("MAVLINK_OUT");
-    
-    logger.info("device") << "Opening USB device at " << path;
 
     if(!initUSB()){
         return false;
@@ -145,9 +143,19 @@ bool mavlink_usb_importer::isValidFD(int fd) {
 }
 
 bool mavlink_usb_importer::initUSB(){
-    usb_fd = open(path.c_str(), O_RDWR | O_NDELAY);
-    if (usb_fd < 0) {
-        logger.perror("init") << "Open USB device";
+
+    for(const auto& path : paths)
+    {
+        usb_fd = open(path.c_str(), O_RDWR | O_NDELAY);
+        if (usb_fd < 0) {
+            logger.perror("init") << "Open USB device at " << path;
+            continue;
+        }
+    }
+
+    if( usb_fd <= 0 )
+    {
+        // No valid device found
         return false;
     }
     
@@ -169,7 +177,7 @@ bool mavlink_usb_importer::initUSB(){
     // waits a second after opening the connection and before sending
     // this data.
      
-    sleep( config->get<unsigned int>("init_sleep", 0) );
+    sleep( config().get<unsigned int>("init_sleep", 0) );
 
     tcflush(usb_fd,TCIOFLUSH);
     
