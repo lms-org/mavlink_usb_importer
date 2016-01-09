@@ -150,6 +150,8 @@ bool mavlink_usb_importer::initUSB(){
         if (usb_fd < 0) {
             logger.perror("init") << "Open USB device at " << path;
             continue;
+        } else {
+            break;
         }
     }
 
