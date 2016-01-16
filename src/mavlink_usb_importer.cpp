@@ -24,10 +24,6 @@ bool mavlink_usb_importer::initialize() {
         return false;
     }
 
-    // Start receiver thread
-    shouldStopReceiver = false;
-    receiverThread = std::thread(&mavlink_usb_importer::receiver, this);
-
     return true;
 }
 
@@ -184,6 +180,13 @@ bool mavlink_usb_importer::initUSB(){
     tcflush(usb_fd,TCIOFLUSH);
     
     logger.info("init") << "Initialized USB device connection";
+
+    // Start receiver thread
+    if(receiverThread.joinable()) {
+        receiverThread.join();
+    }
+    shouldStopReceiver = false;
+    receiverThread = std::thread(&mavlink_usb_importer::receiver, this);
 
     return true;
 }
