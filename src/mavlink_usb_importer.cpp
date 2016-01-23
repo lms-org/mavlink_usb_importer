@@ -65,7 +65,7 @@ bool mavlink_usb_importer::cycle() {
             lms::Time::fromMillis(1).sleep();
         }
     }
-    
+
     // Clear all messages from channel
     outChannel->clear();
     
@@ -74,9 +74,11 @@ bool mavlink_usb_importer::cycle() {
     
     // TODO: use move semantics
     *inChannel = messageBuffer;
-    //logger.debug("new messages: ")<<messageBuffer.messages.size();
+    //debugging
+    int bytesAvailable;
+    ioctl(usb_fd,FIONREAD,&bytesAvailable); //bringt glück, die methode bleibt drin, dann kommt kein error
+    logger.debug("cycle")<<"bytesAvailable: "<<bytesAvailable<<" msgs pro sekunde: "<<messageBuffer.size()/0.01;
     messageBuffer.clear();
-    
     messageBufferMutex.unlock();
     
     return true;
@@ -85,9 +87,21 @@ bool mavlink_usb_importer::cycle() {
 void mavlink_usb_importer::receiver()
 {
     mavlink_message_t msg;
-    
-    while( usb_fd >= 0 && !shouldStopReceiver )
-    {
+    int lastSequenceNumber = 0;
+    int sequenceFail = 0;
+    //TODO check seq. number manually
+    while( usb_fd >= 0 && !shouldStopReceiver ){
+        //check how much bytes are available
+        //int bytesAvailable = 0;
+        //TODO int clearBufferLimit = 0;
+        //ioctl(usb_fd,FIONREAD,&bytesAvailable);
+        //logger.error("bytesAvailable")<<bytesAvailable;
+        /*//TODO
+        if(bytesAvailable> clearBufferLimit){
+            tcflush(usb_fd,TCIFLUSH);
+        }
+        */
+        //logger.error("bytesAvailable")<<bytesAvailable;
         // read byte
         char buf;
         ssize_t numBytes = read(usb_fd, &buf, 1);
@@ -100,17 +114,25 @@ void mavlink_usb_importer::receiver()
                 messageBuffer.add(msg);
                 messageBufferMutex.unlock();
                 logger.debug("receive") << "Received Message!";
-            }
-
-            //TODO don't think that packet_rx_drop_count is set
-            if(receiverStatus.buffer_overrun > 0){
-                logger.error("receiver")<<"buffer_overrun: "<<(int) receiverStatus.buffer_overrun;
-            }
-            if(receiverStatus.packet_rx_drop_count > 0){
-                logger.error("receiver")<<"packet_rx_drop_count: "<<(int) receiverStatus.packet_rx_drop_count;
-            }
-            if(receiverStatus.parse_error > 0){
-                logger.error("receiver")<<"parse_error: "<<(int) receiverStatus.parse_error;
+                //TODO don't think that packet_rx_drop_count is set
+                //logger.error("msg.seq")<<(int)msg.seq;
+                if(((int)msg.seq)-lastSequenceNumber>1){
+                    logger.error("sequence number failed") << msg.seq-lastSequenceNumber;
+                    sequenceFail += lastSequenceNumber-msg.seq -1;
+                }
+                lastSequenceNumber  = msg.seq;
+                if(255 == lastSequenceNumber){
+                    lastSequenceNumber = -1;
+                }
+                if(receiverStatus.buffer_overrun > 0){
+                    logger.error("receiver")<<"buffer_overrun: "<<(int) receiverStatus.buffer_overrun;
+                }
+                if(receiverStatus.packet_rx_drop_count > 0){
+                    logger.error("receiver")<<"packet_rx_drop_count: "<<(int) receiverStatus.packet_rx_drop_count<< " received packets"<<receiverStatus.packet_rx_success_count;
+                }
+                if(receiverStatus.parse_error > 0){
+                    logger.error("receiver")<<"parse_error: "<<(int) receiverStatus.parse_error;
+                }
             }
         }
     }
