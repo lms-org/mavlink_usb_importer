@@ -101,6 +101,17 @@ void mavlink_usb_importer::receiver()
                 messageBufferMutex.unlock();
                 logger.debug("receive") << "Received Message!";
             }
+
+            //TODO don't think that packet_rx_drop_count is set
+            if(receiverStatus.buffer_overrun > 0){
+                logger.error("receiver")<<"buffer_overrun: "<<(int) receiverStatus.buffer_overrun;
+            }
+            if(receiverStatus.packet_rx_drop_count > 0){
+                logger.error("receiver")<<"packet_rx_drop_count: "<<(int) receiverStatus.packet_rx_drop_count;
+            }
+            if(receiverStatus.parse_error > 0){
+                logger.error("receiver")<<"parse_error: "<<(int) receiverStatus.parse_error;
+            }
         }
     }
     
