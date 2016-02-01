@@ -20,11 +20,17 @@ bool mavlink_usb_importer::initialize() {
     inChannel = writeChannel<Mavlink::Data>("MAVLINK_IN");
     outChannel = writeChannel<Mavlink::Data>("MAVLINK_OUT");
 
-    if(!initUSB()){
-        return false;
+    lms::Time initStart = lms::Time::now();
+    while(initStart.since().toFloat() < config().get<float>("init_timeout", 10)) {
+        if(initUSB()){
+            return true;
+        }
+
+        // Wait 50msec
+        lms::Time::fromMillis(config().get<size_t>("init_timeout_sleep", 50)).sleep();
     }
 
-    return true;
+    return false;
 }
 
 bool mavlink_usb_importer::deinitialize() {
