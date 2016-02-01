@@ -177,7 +177,7 @@ bool mavlink_usb_importer::initUSB(){
     {
         usb_fd = open(path.c_str(), O_RDWR | O_NDELAY);
         if (usb_fd < 0) {
-            logger.perror("init") << "Open USB device at " << path;
+            logger.perror("init") << "Open USB device at " << path.c_str() << " (errno: " << errno << ")";
             continue;
         } else {
             break;
