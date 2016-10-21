@@ -27,7 +27,7 @@ bool mavlink_usb_importer::initialize() {
         }
 
         // Wait 50msec
-        lms::Time::fromMillis(config().get<size_t>("init_timeout_sleep", 50)).sleep();
+        lms::Time::fromMillis(config().get<int>("init_timeout_sleep", 50)).sleep();
     }
 
     return false;
@@ -214,7 +214,7 @@ bool mavlink_usb_importer::initUSB(){
     // waits a second after opening the connection and before sending
     // this data.
      
-    sleep( config().get<unsigned int>("init_sleep", 0) );
+    sleep( config().get<int>("init_sleep", 0) );
 
     tcflush(usb_fd,TCIOFLUSH);
     
