@@ -7,6 +7,7 @@
 #include <fcntl.h>
 
 #include <termios.h>
+//#include "usb_reset_service/usb_reset_service.h"
 
 #ifndef __APPLE__
   #include <linux/usbdevice_fs.h>
@@ -163,13 +164,28 @@ bool mavlink_usb_importer::isValidFD(int fd) {
     if (rc == 0){
         return true;
     }
+
+    rc = ioctl(fd, USBDEVFS_RESET, 0);
+    if (rc < 0){
+        logger.warn("USBDEVFS_RESET")<<"failed";
+    }
+    close(fd);
+    //get reset service
+    /*
+    lms::ServiceHandle<usb_reset_service::UsbResetService> resetService =  getService<usb_reset_service::UsbResetService>("USB_RESET");
+    if(resetService.isValid()){
+        //TODO resetService->reset();
+    }else{
+        logger.error("reset")<<" UsbResetService invalid";
+    }
+    */
 #endif
     
     logger.perror("is_valid_fd") << "Error in ioctl: Trying to reconnect";
     /// Haben wir einen Input/Output error? -> usb neu initialisieren
-    if(errno == EIO || errno == EBADF || errno == ENXIO || errno == ENODEV) {
+    if(errno == EIO || errno == EBADF || errno == ENXIO || errno == ENODEV || errno == EFAULT) {
         close(fd);
-        while(!initUSB()) {
+        if(!initUSB()) {
             usleep(100);
         }
     }
