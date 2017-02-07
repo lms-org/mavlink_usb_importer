@@ -167,7 +167,7 @@ bool mavlink_usb_importer::isValidFD(int fd) {
     
     logger.perror("is_valid_fd") << "Error in ioctl: Trying to reconnect";
     /// Haben wir einen Input/Output error? -> usb neu initialisieren
-    if(errno == EIO || errno == EBADF || errno == ENXIO) {
+    if(errno == EIO || errno == EBADF || errno == ENXIO || errno == ENODEV) {
         close(fd);
         while(!initUSB()) {
             usleep(100);
